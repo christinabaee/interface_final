@@ -1,0 +1,62 @@
+// serial communication between a microcontroller with a pot on pin A0
+// arduino code can be found here : https://gist.github.com/shfitz/b78b412960fba668d08ccc84b9ee838d
+
+let serial;
+let latestData = "waiting for data";
+var bg=0;
+let rains = [];
+
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+  serial = new p5.SerialPort();
+  serial.open('/dev/tty.usbmodem144401');
+  serial.on('data', gotData);
+
+}
+
+
+function gotData() {
+  let currentString = serial.readLine();
+  trim(currentString);
+  if (!currentString) return;
+  console.log(currentString);
+  latestData = currentString;
+}
+
+function draw() {
+  background(20);
+  for (let r of rains){
+    r.show()
+    r.update()
+  }
+  let potVal = int(map(latestData, 0, 1023, 0,10));
+  //text(potVal, 10,10);
+
+  
+  for (let i=0; i<potVal;i++){
+    rains.push(new Rain(random(width),0))
+  }
+
+}
+
+class Rain{
+  constructor(x,y){
+    this.pos=createVector(x,y)
+    this.vel=createVector(0,random(7,10))
+    this.len=random(15,30)
+    this.thick=random(255)
+  }
+  
+  show(){
+    stroke(255,this.thick)
+    line(this.pos.x,this.pos.y,this.pos.x,this.pos.y-this.len)
+  }
+  
+  update(){
+    this.pos.add(this.vel)
+    if (this.pos.y>height+50){
+      rains.shift()
+    }
+  }
+  
+}
